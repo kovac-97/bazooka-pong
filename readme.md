@@ -1,7 +1,8 @@
 
 Vanilla JavaScript Game - Bazooka pong
+
 Play at: https://kovac-97.github.io/bazooka-pong/
-Overview
+
 
 This is a personal game development project undertaken to improve my JavaScript and general programming skills. It's a non-commercial endeavor aimed at showcasing various features that JavaScript has to offer, including multithreading, events, object oriented programming, Promises, and functional programming. I attempted to make the code as modular as possible and use good software development practices, however other projects await so you can expect some bugs. 
 
