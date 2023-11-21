@@ -1,25 +1,33 @@
 class Player extends Actor {
 
-    static hitboxSize = 18;
-    constructor(location = new Vector2D(), element, rotation, weapon, controller) {
-        super(location, element, rotation);
+    static hitboxSize = 15;
+    constructor(location = new Vector2D(), offset, element, rotation, weapon, controller) {
+        super(
+            location,
+            element,
+            rotation,
+            true, //enable actor
+            offset
+        );
+        this.resetPosition();
 
-        this.acceleration = 0;
-        this.speed = 0;
-        this.destination = 0;
-        this.remainingDistance = 0; //we do not initialize anything in the loops
-   
         this.weapon = weapon;
         weapon.player = this;
 
-        controller.control(this);
+        this.controller = controller;
     }
 
+    control() {
+        this.controller.control(this);
+    }
 
+    disable() {
+        super.disableActor();
+        console.log(this.controller);
+        this.controller.stop();
+    }
 
     tick(deltaTime) {
-        //function that ticks in a game loop
-
         this.moveTo(this.destination, deltaTime);
         this.handleCollison();
     }
@@ -58,9 +66,9 @@ class Player extends Actor {
 
         if (this.remainingDistance < 5) {
             //if distance to destination is less than 5, then we drasticly reduce the
-            //player's speed
+            //player's speed. This is a quirk that the player can abuse to stop faster than possible by just changing direction.
             this.speed -= (1.4 * this.speed * deltaTime);
-        } else if (this.remainingDistance < 10 || this.shouldChangeDirection(this.speed, this.location.x, destination)) {
+        } else if (this.remainingDistance < 10 || this.shouldChangeDirection()) {
             this.speed -= (0.7 * this.speed * deltaTime);
         }
 
@@ -68,7 +76,12 @@ class Player extends Actor {
         this.location.x += this.speed * deltaTime;
     }
 
-    shouldChangeDirection(speed, location, destination) {
+    shouldChangeDirection() {
+        //By applying De Morgan's Laws to the if-elif-else below we get the shorter form:
+        return (this.destination <= this.location || this.speed <= 0) && (this.destination >= this.location || this.speed >= 0);
+
+        //Leaving this here for clarity...
+        /*
         if (destination > location && speed > 0) {
             //destination is right of the location
             //the player is moving towards it
@@ -80,9 +93,12 @@ class Player extends Actor {
         } else {
             return true;
         }
+        */
     }
 
     handleCollison() {
+        //Colliding with the wall doesn't immediatly change the player's speed.
+        //This can also be used to rebound and build faster than normal speeds and create high angles of aim.
         if (this.location.x > Globals.PLAYGROUND_X / 2) {
             this.speed = -this.speed; //change direction of travel
             this.location.x -= (2 * this.location.x) - Globals.PLAYGROUND_X; // set location to the mirror image of the overshoot
@@ -94,15 +110,17 @@ class Player extends Actor {
         }
     }
 
-    setDestination(destination){
+    setDestination(destination) {
         //There is no need to use this function within this class.
         //This is a public function that just abstracts the inner variable this.destination.
         this.destination = destination;
     }
 
-
-
-
-
-
+    resetPosition() {
+        this.location.x = 0;
+        this.speed = 0;
+        this.acceleration = 0;
+        this.destination = 0;
+        this.remainingDistance = 0;
+    }
 }

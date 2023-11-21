@@ -1,8 +1,6 @@
 
 Vanilla JavaScript Game - Bazooka pong
-
-Play at: https://kovac-97.github.io/bazooka-pong/
-
+Overview
 
 This is a personal game development project undertaken to improve my JavaScript and general programming skills. It's a non-commercial endeavor aimed at showcasing various features that JavaScript has to offer, including multithreading, events, object oriented programming, Promises, and functional programming. I attempted to make the code as modular as possible and use good software development practices, however other projects await so you can expect some bugs. 
 
@@ -25,4 +23,13 @@ Contact
 For any inquiries feel free to reach out at kovanikola@gmail.com.
 
 Local install:
-Just clone the repository and open index.html.
+Due to use of fetch API, you will have to create a local HTTP server:
+
+    git clone https://github.com/kovac-97/bazooka-pong
+
+You can use python to create an HTTP server:
+
+    cd bazooka-pong
+    python3 -m http.server --bind 127.0.0.1 8080
+
+Acces the game using your browser at localhost:8080

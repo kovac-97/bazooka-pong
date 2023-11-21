@@ -1,6 +1,20 @@
 class BoxManager {
 
-    static GenerateBoxes(numberOfBoxes = Math.floor((Math.random() * 5) + 4), existingBoxes = []) {
+
+    static GenerateObjects(numberOfBoxes = Math.floor((Math.random() * 5) + 4)) {
+        var boxes = this.GenerateBoxes(numberOfBoxes);
+
+        var boxMap = Object.fromEntries( //Maps boxId to boxes array index
+            boxes.map((box, index) => {
+                box.enable();
+                return [box.id, index];
+            })
+        );
+
+        return [boxes, boxMap];
+    }
+
+    static GenerateBoxes(numberOfBoxes, existingBoxes = []) {
         if (numberOfBoxes === 0) {
             return existingBoxes;
         }
@@ -30,7 +44,7 @@ class BoxManager {
             const { x, y } = generateRandomLocation();
             const newBox = new Box(dimension, new Vector2D(x, y), rotation, true);
 
-            return isCloseToAnyExistingBox(newBox) ? (()=>{ newBox.destroyElement(); return null;})() : newBox;
+            return isCloseToAnyExistingBox(newBox) ? (() => { newBox.destroyElement(); return null; })() : newBox;
         };
 
         return createBox();

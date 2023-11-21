@@ -4,12 +4,12 @@ class SpinnerWeapon extends Weapon {
         super(location, rotation, './assets/blue-bullet.png');
         this.maxSpin = 0.4;
         this.spin = 0;
+        this.speed = new Vector2D(0, 0);
 
     }
 
     tick(deltaTime) {
         super.tick(deltaTime);
-        console.log(this.speed.magnitude());
         this.speed.rotate(this.spin * deltaTime);
         this.rotation = Math.atan2(this.speed.y, this.speed.x);
     }

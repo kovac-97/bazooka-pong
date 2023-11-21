@@ -6,7 +6,7 @@ class Weapon extends Actor {
         this.startSpeed = 32;
         this.chambered = true;
         this.incidentAngle; //angle between the box that it hits and the movement
-        this.speed = new Vector2D();
+        this.speed = new Vector2D(0, 0);
         this.prevLocation = structuredClone(location);
         this.zeroDamage = true;
         this.player = null; // will be set in Player's constructor
@@ -138,6 +138,7 @@ class Weapon extends Actor {
     destroy() {
         this.disableActor();
         this.chambered = true;
+
         //could create an animation
         clearTimeout(this.destroyTimeout);
     }

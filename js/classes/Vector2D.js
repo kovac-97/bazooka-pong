@@ -18,21 +18,12 @@ class Vector2D {
     }
 
     rotate(angle) {
-
-        //To prevent errors, we will normalize the vector after operation
         var cos = Math.cos(angle);
         var sin = Math.sin(angle);
-
-        var mag = this.magnitude();
 
         let x = this.x;
         this.x = (this.x * cos) - (this.y * sin);
         this.y = (x * sin) + (this.y * cos);
-
-        var newVector = Vector2D.normalize(this);
-        this.x = newVector.x;
-        this.y = newVector.y;
-        this.scale(mag);
     }
 
     scale(scalar){
@@ -59,7 +50,8 @@ class Vector2D {
 
     static normalize(V) {
         var magnitude = V.magnitude();
-        return new Vector2D(V.x / magnitude, V.y / magnitude);
+
+        return  magnitude == 0 ? 0 : new Vector2D(V.x / magnitude, V.y / magnitude);
     }
 
     static distanceBetween(V1, V2) {
