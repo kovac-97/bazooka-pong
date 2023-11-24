@@ -1,4 +1,6 @@
 class Weapon extends Actor {
+
+    static weaponName = "Fireball";
     constructor(location = new Vector2D(), rotation = 0, asset_path = './assets/bullet.png') {
         //element will be created dynamicaly
         var element = Weapon.createElement(asset_path);
@@ -9,10 +11,9 @@ class Weapon extends Actor {
         this.speed = new Vector2D(0, 0);
         this.prevLocation = structuredClone(location);
         this.zeroDamage = true;
-        this.player = null; // will be set in Player's constructor
     }
 
-    tick(deltaTime) {
+    tick(deltaTime, playerLocation = new Vector2D()) {
         if (!this.enabled) {
             return;
         }
@@ -23,7 +24,7 @@ class Weapon extends Actor {
 
         if (
             this.zeroDamage &&
-            Vector2D.subtract(this.location, this.player.location).magnitude() > Player.hitboxSize
+            Vector2D.subtract(this.location, playerLocation).magnitude() > Player.hitboxSize
         ) {
             this.zeroDamage = false;
         }
@@ -34,18 +35,18 @@ class Weapon extends Actor {
         this.prevLocation.y = this.location.y;
     }
 
-    fire() {
-
+    fire(startLocation, startRotation, additionalSpeed) {
+        
         if (!this.chambered) {
             return;
         }
 
         this.zeroDamage = true;
         this.chambered = false; // can be shot again only when destroyed
-        this.location = structuredClone(this.player.location); // cannot pass it by reference          
-        this.speed.x = (Math.cos(this.player.rotation) * this.startSpeed) + (0.6 * this.player.speed); //add a portion of player's X speed
-        this.speed.y = Math.sin(this.player.rotation) * this.startSpeed;
-        this.rotation = Math.atan2(this.speed.y, this.speed.x); // cannot use player's 
+        this.location = structuredClone(startLocation); // cannot pass it by reference          
+        this.speed.x = (Math.cos(startRotation) * this.startSpeed) + (0.6 * additionalSpeed); //add a portion of player's X speed
+        this.speed.y = Math.sin(startRotation) * this.startSpeed;
+        this.rotation = Math.atan2(this.speed.y, this.speed.x);
         this.destroyTimeout = setTimeout(() => { this.destroy() }, 5000); //destroy the bullet after 5 seconds of flight
         this.enableActor();
 
@@ -114,14 +115,14 @@ class Weapon extends Actor {
         //bullet CANNOT end up in a box
         //we can mirror the bullet to the other side of the line it hit
         //we can do the same complex rotation we did with speed
-        let path = new Line(this.location, this.prevLocation);
+        let path = new Line(this.prevLocation, this.location);
 
         let intersectionPoint = path.intersectionPoint(line);
         let distanceOffset = Vector2D.subtract(this.location, intersectionPoint);
 
         tempVar = distanceOffset.x;
         distanceOffset.x = (tempVar * line.complexSqr.x) + (distanceOffset.y * line.complexSqr.y);
-        distanceOffset.y = (tempVar * line.complexSqr.y) - (distanceOffset.y * line.complexSqr.x) + 1;
+        distanceOffset.y = (tempVar * line.complexSqr.y) - (distanceOffset.y * line.complexSqr.x);
 
         this.location = Vector2D.add(distanceOffset, intersectionPoint);
     }

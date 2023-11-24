@@ -12,8 +12,6 @@ class Player extends Actor {
         this.resetPosition();
 
         this.weapon = weapon;
-        weapon.player = this;
-
         this.controller = controller;
     }
 
@@ -114,6 +112,11 @@ class Player extends Actor {
         //There is no need to use this function within this class.
         //This is a public function that just abstracts the inner variable this.destination.
         this.destination = destination;
+    }
+
+    fireWeapon(){
+       // this.weapon.fire.apply(this.weapon, ['jel me zajebavas', this.rotation, this.speed.x]);
+        this.weapon.fire(this.location, this.rotation, this.speed);
     }
 
     resetPosition() {

@@ -4,22 +4,36 @@ window.onload = function () {
 
     const playerElement = document.getElementById('player');
     const enemyElement = document.getElementById('enemy');
-    const weapons = [SpinnerWeapon, Weapon];
+    const weapons = [Weapon, SpinnerWeapon];
 
     ; (async function () {
 
-        const game = await GameInstance.create(setup, gameloop);
-        game.showMainMenu();
+        await UI.fetchUIResources();
+        const game = new GameInstance(setup, gameloop, weapons);
+        UI.showMainMenu();
 
-        function setup() {
+        function setup(options) {
             //Setup is called before calling the gameloop.
             //We return all data needed for main() to work;
-            let random = Math.floor(Math.random() * weapons.length);
 
-            let playerWeapon = new weapons[random](new Vector2D(0, -Globals.PLAYGROUND_Y / 2), Math.PI / 2);
-            random = Math.floor(Math.random() * weapons.length);
-            let enemyWeapon = new weapons[random](new Vector2D(0, Globals.PLAYGROUND_Y / 2), -Math.PI / 2);
+            //options are currently {playerWeapon: X, enemyWeapon: X, multithreading: T/F}
+            //null weapons mean random:
 
+            let playerWeapon;
+            if (options.playerWeapon) {
+                playerWeapon = new options.playerWeapon(new Vector2D(0, -Globals.PLAYGROUND_Y / 2), Math.PI / 2);
+            } else {
+                let random = Math.floor(Math.random() * weapons.length);
+                playerWeapon = new weapons[random]
+            }
+
+            let enemyWeapon;
+            if (options.enemyWeapon) {
+                enemyWeapon = new options.enemyWeapon(new Vector2D(0, -Globals.PLAYGROUND_Y / 2), Math.PI / 2);
+            } else {
+                let random = Math.floor(Math.random() * weapons.length);
+                enemyWeapon = new weapons[random]
+            }
 
             let player = new Player(
                 new Vector2D(0, -0.4 * Globals.PLAYGROUND_Y),
@@ -38,24 +52,25 @@ window.onload = function () {
                 new AIController()
             );
 
-            let [boxes, boxMap] = BoxManager.GenerateObjects();
-
-            ParallelizeUtility.prepareObjectForCloning(boxes);
-            let parallelBoxCollision = new ParallelizeUtility(
-                boxes, //Static data to be copied into WebWorker's memory space.
-                (box, weapon) => { //Callback function from each WebWorker when it finishes its work.
-                    if (box.isHit(weapon)) {
-                        return box.id;
-                    } else {
-                        return false;
-                    };
-                },
-                (boxId) => {//Callback function executed in the primary memory space. Argument is passed from the WebWorker function.
-                    if (boxId) {
-                        playerWeapon.collisionEvent(boxes[boxMap[boxId]]);
+            var [boxes, boxMap] = BoxManager.GenerateObjects();
+            if (options.multithreading) {
+                ParallelizeUtility.prepareObjectForCloning(boxes);
+                var parallelBoxCollision = new ParallelizeUtility(
+                    boxes, //Static data to be copied into WebWorker's memory space.
+                    (box, weapon) => { //Callback function from each WebWorker when it finishes its work.
+                        if (box.isHit(weapon)) {
+                            return box.id;
+                        } else {
+                            return false;
+                        };
+                    },
+                    (boxId) => {//Callback function executed in the primary memory space. Argument is passed from the WebWorker function.
+                        if (boxId) {
+                            playerWeapon.collisionEvent(boxes[boxMap[boxId]]);
+                        }
                     }
-                }
-            );
+                );
+            }
 
             return {
                 'player': player,
@@ -79,25 +94,29 @@ window.onload = function () {
             deltaTime = (tFrame - last_tFrame) / 100; //conversion to miliseconds
 
             player.tick(deltaTime);
-            playerWeapon.tick(deltaTime);
+            playerWeapon.tick(deltaTime, player.location);
 
             enemy.tick(deltaTime);
-            enemyWeapon.tick(deltaTime);
+            enemyWeapon.tick(deltaTime, enemy.location);
 
             //Run collision detection for player's projectile in parallel.
-            //In this case performance actually degrades with the use of multithreading.
+            //There might no be performance benefits when using multithreading in this case. It may even cause degraded performance.
+
             //This is a demonstration of how it is possible to distribute heavy workload across multiple cores.
-            //tasks = parallelBoxCollision.runTasks({ location: playerWeapon.location });
-            //await tasks;
+            if (parallelBoxCollision) { //the object would be undefined if multithreading is turned off
+                tasks = parallelBoxCollision.runTasks({ location: playerWeapon.location });
+                await tasks;
+            }
 
             for (var box of boxes) {
-                if (box.isHit(enemyWeapon)) 
+                if (box.isHit(enemyWeapon))
                     enemyWeapon.collisionEvent(box);
-                if(box.isHit(playerWeapon))
+
+                if (!parallelBoxCollision && box.isHit(playerWeapon))
                     playerWeapon.collisionEvent(box);
             }
-            handlePlayerCollisions();
 
+            handlePlayerCollisions();
 
             playerWeapon.afterTick(deltaTime);
             enemyWeapon.afterTick(deltaTime);
@@ -122,6 +141,7 @@ window.onload = function () {
                 ||
                 Vector2D.distanceBetween(enemyWeapon.location, player.location) < Player.hitboxSize
             ) {
+                render();
                 document.dispatchEvent(new CustomEvent('gameOverEvent', {
                     detail: { win: false }
                 }));
@@ -131,6 +151,7 @@ window.onload = function () {
                 ||
                 Vector2D.distanceBetween(playerWeapon.location, enemy.location) < Player.hitboxSize
             ) {
+                render();
                 document.dispatchEvent(new CustomEvent('gameOverEvent', {
                     detail: { win: true }
                 }));

@@ -14,7 +14,7 @@ class AIController {
 
     startShooting(shootTimeout, player, maxPeriod = 3000) {
         this.shootTimeoutHandle = setTimeout(() => {
-            player.weapon.fire();
+            player.fireWeapon();
             shootTimeout = Math.random() * maxPeriod;
             this.startShooting(shootTimeout, player);
         }, shootTimeout);

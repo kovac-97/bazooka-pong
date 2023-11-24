@@ -5,19 +5,23 @@
 
     <title>Bazooka pong</title>
     <link rel='stylesheet' href='style.css' type='text/css'>
-    <meta name='viewport' content='width=device-width' />
+    <meta name='viewport' content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
 </head>
 
 <body>
-    <p id = "waitScreen">
+    <p id="waitScreen">
         Please wait...
     </p>
     <img id='player' class='player' src='./assets/player_chaingun.png' />
     <img id='enemy' class='player' src='./assets/player_chaingun.png' />
-    <div class="playground" id='playground'></div>
+    <div class="playground" id='playground'>
+        <img class="edge" src="assets/plank.png">
+        <img class="edge" src="assets/plank.png">
+    </div>
 </body>
 
 <script src="js/classes/Globals.js"></script>
+<script src="js/classes/UI.js"></script>
 <script src="js/classes/Complex.js"></script>
 <script src="js/classes/Vector2D.js"></script>
 <script src="js/classes/Line.js"></script>

@@ -1,55 +1,72 @@
 
 class GameInstance {
-    constructor(setupFunction, gameLoopFunction, UI) {
+
+    static options = {
+        playerWeapon: null,
+        enemyWeapon: null,
+        multithreading: false
+    };
+
+    constructor(setupFunction, gameLoopFunction, weapons) {
         this.setupFunction = setupFunction;
         this.gameLoopFunction = gameLoopFunction;
-        this.UI = UI;
+        this.weapons = [null].concat(weapons);
+
         this.playground = document.getElementById('playground');
         this.frameToken = null;
+        this.gameStarted = false;
         this.controllers = [];
+
         document.addEventListener('gameOverEvent', (event) => {
             this.endGame(event.detail.win);
         });
+
+        document.addEventListener('startGameEvent', () => {
+            this.cleanUp();
+            this.startGame();
+            UI.clearUI();
+        });
+
+        document.addEventListener('changePlayerWeapon', () => {
+            this.changePlayerWeapon();
+            UI.updateOptions(GameInstance.options);
+        });
+
+        document.addEventListener('changeEnemyWeapon', () => {
+            this.changeEnemyWeapon();
+            UI.updateOptions(GameInstance.options);
+        });
+
+        document.addEventListener('changeMultithreadingMode', () => {
+            GameInstance.options.multithreading = ! GameInstance.options.multithreading;
+            UI.updateOptions(GameInstance.options);
+        });
     }
 
-    static async create(setupFunction, gameLoopFunction) {
-        var UI = await GameInstance.fetchUIResources();
-        return new GameInstance(setupFunction, gameLoopFunction, UI);
+    changePlayerWeapon() {
+        this.changeWeapon('playerWeapon');
     }
 
-    static fetchUIResources() {
-
-        var keys = [
-            'endGame.html',
-            'mainMenu.html',
-            'modal.html'
-        ];
-        var promises = [];
-
-        for (var key of keys) {
-            promises.push(fetch(`./UI/${key}`).then(response => response.text()));
-        }
-
-
-        return Promise.all(promises).then((results => {
-            var UI = {};
-            for (var resultIndex in results) {
-                UI[keys[resultIndex]] = results[resultIndex];
-            }
-            return UI;
-        }));
-
+    changeEnemyWeapon() {
+        this.changeWeapon('enemyWeapon');
     }
 
-
+    changeWeapon(whoseWeapon) {
+        //Do not use this function directly
+        var currentWeapon = GameInstance.options[whoseWeapon];
+        var index = this.weapons.indexOf(currentWeapon);
+        var len = this.weapons.length;
+        GameInstance.options[whoseWeapon] = this.weapons[(index + 1) % len];
+    }
 
     startGame() {
 
+        this.gameStarted = true;
         //To avoid passing way to many arguments into the main
         //we will assign them to global scope.
         //This does create global scope pollution, but makes it more convenient
         //to work on setup and gameloop functions.
-        let params = this.setupFunction();
+        let params = this.setupFunction(GameInstance.options);
         for (var key of Object.keys(params)) {
             window[key] = params[key];
         }
@@ -63,6 +80,9 @@ class GameInstance {
     }
 
     cleanUp() {
+        if (!this.gameStarted)
+            return;
+
         for (var player of this.players) {
             player.controller.stop();
             player.resetPosition();
@@ -78,53 +98,13 @@ class GameInstance {
             weapon.remove();
     }
 
+    endGame(win) {
+        this.stopMain();
+        UI.showEndGame(win);
+    }
+
     stopMain() {
         window.cancelAnimationFrame(this.frameToken);
     }
-
-    showMainMenu() {
-        var ui = this.createUIElement('mainMenu.html');
-        document.getElementById('waitScreen').remove();
-        ui.querySelector('button').onclick = () => {
-            ui.remove();
-            setTimeout(() => { this.startGame(); }, 10);
-        }
-    }
-
-    endGame(win) {
-        this.showModal(win);
-        this.stopMain();
-    }
-
-    showEndGame() {
-        var ui = this.createUIElement('endGame.html');
-        ui.querySelector('button').onclick = () => {
-            ui.remove();
-            setTimeout(() => { this.startGame(); }, 10);
-        }
-    }
-
-    showModal(win) {
-        var ui = this.createUIElement('modal.html');
-        if (win)
-            ui.querySelector('p').innerText = "Bot probably killed himself. No congrats for you.";
-
-        ui.querySelector('button').onclick = () => {
-            this.showEndGame();
-            this.cleanUp();
-            ui.remove();
-        }
-    }
-
-    createUIElement(key) {
-        var dummyDiv = document.createElement('div');
-        dummyDiv.id = `dummyDiv${key}`;
-        dummyDiv.innerHTML = this.UI[key];
-        document.body.appendChild(dummyDiv);
-
-        return dummyDiv;
-    }
-
-
 
 }
