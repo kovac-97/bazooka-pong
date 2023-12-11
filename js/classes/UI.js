@@ -79,8 +79,12 @@ class UI {
 
     static showModal(win) {
         UI.showElement('modal.html');
+
+        var msg = "Better luck next time :("; 
         if (win)
-            UI.currentUI.querySelector('p').innerText = "Bot probably killed himself. No congrats for you.";
+            msg = "Bot probably killed himself. No congrats for you.";
+
+        UI.currentUI.querySelector('p').innerText = msg;
 
         var btn = UI.currentUI.querySelector('button');
         btn.onclick = () => {
