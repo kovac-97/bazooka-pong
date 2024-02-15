@@ -11,13 +11,9 @@ In addition to the primary purpose of this being a portfolio, I hope it will pro
 JavaScript Features
 
 Multithreading: Parallelization of collision detection tasks using WebWorkers. Decided to turn it off by default as it actually degraded performance on mobile devices.
-
 Events: Used them to avoid complex logic implementation, primarily to work with UI and Game communication.
-
 Classes: While they are rare in regular JavaScript, they are useful when working on large projects such as game development.
-
 Promises: Used promises to achieve await capability with WebWorkers.
-
 Functional Programming: Used some functional programming to generate boxes.
 
 Assets
